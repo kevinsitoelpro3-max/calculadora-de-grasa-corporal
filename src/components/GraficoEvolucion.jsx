@@ -24,8 +24,8 @@ function ticksRedondos(min, max, cantidad = 4) {
   return ticks
 }
 
-export default function GraficoEvolucion({ mediciones, sistema, meta }) {
-  const [metricaId, setMetricaId] = useState('porcentaje')
+export default function GraficoEvolucion({ mediciones, sistema, metas = {}, metricaInicial = 'porcentaje' }) {
+  const [metricaId, setMetricaId] = useState(metricaInicial)
   const [activo, setActivo] = useState(null)
   const metrica = METRICAS.find((m) => m.id === metricaId)
   const unidad = metrica.esPeso && sistema === 'imperial' ? 'lb' : metrica.unidad
@@ -35,7 +35,8 @@ export default function GraficoEvolucion({ mediciones, sistema, meta }) {
     .sort((a, b) => a.fecha.localeCompare(b.fecha))
     .map((m) => ({ fecha: m.fecha, t: new Date(m.fecha).getTime(), v: convertir(metrica.valor(m)) }))
 
-  const lineaMeta = metricaId === 'porcentaje' && meta ? meta : null
+  const metaKg = metas[metricaId]
+  const lineaMeta = metaKg != null ? convertir(metaKg) : null
   const valores = puntos.map((p) => p.v).concat(lineaMeta ?? [])
   const rangoV = Math.max(...valores) - Math.min(...valores)
   const ticks = ticksRedondos(Math.min(...valores) - rangoV * 0.1 - 0.5, Math.max(...valores) + rangoV * 0.1 + 0.5)

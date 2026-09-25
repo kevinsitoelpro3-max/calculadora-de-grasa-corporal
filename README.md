@@ -100,10 +100,13 @@ pantalla.
 
 7. **Panel "Tu plan completo" (Premium)**. Todavía no hay cobro, así que el panel queda
    abierto para todos durante el lanzamiento, en pestañas:
-   - **Progreso** (`meta.js`, `MetaGrasa.jsx`, `GraficoEvolucion.jsx`): elegís una meta de % de
-     grasa (con un mínimo saludable por género) y la app calcula el peso meta conservando la
-     masa magra, los kilos de grasa a perder y una fecha estimada bajando 0,7 % del peso por
-     semana. Muestra una barra de progreso desde tu primera medición y un gráfico de evolución
+   - **Progreso** (`meta.js`, `MetaGrasa.jsx`, `GraficoEvolucion.jsx`): dos tipos de meta.
+     *Bajar grasa*: elegís un % (sugerido: 3 puntos menos que hoy, con un mínimo saludable por
+     género) y la app calcula el peso meta conservando la masa magra, los kilos de grasa a
+     perder y una fecha estimada bajando 0,7 % del peso por semana. *Ganar músculo*: elegís
+     cuántos kg sumar desde tu primera medición y calcula el tiempo (a ~0,5 kg por mes) y el
+     peso final. Se elige sola la que tiene sentido (músculo si tu objetivo es ganar o si ya
+     estás cerca del mínimo de grasa). Muestra una barra de progreso y un gráfico de evolución
      (% de grasa, peso o masa magra) con la línea de la meta y detalle al tocar cada punto.
    - **Menú** (`menu.js`, `MenuDelDia.jsx`): un día de ejemplo en 4 comidas con porciones en
      gramos que suman tus calorías y macros. Cada comida tiene varias opciones intercambiables

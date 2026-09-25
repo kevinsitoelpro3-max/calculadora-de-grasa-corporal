@@ -1,58 +1,157 @@
 import { useState } from 'react'
-import { calcularMeta, progresoHaciaMeta, RANGO_META, validarMeta } from '../lib/meta.js'
+import {
+  calcularMeta,
+  calcularMetaMusculo,
+  progresoHaciaMeta,
+  RANGO_META,
+  resolverMeta,
+  validarMeta,
+  validarMetaMusculo,
+} from '../lib/meta.js'
 import { formatearFecha, formatearPeso } from '../lib/formato.js'
+import { KG_POR_LIBRA } from '../lib/units.js'
 
-export default function MetaGrasa({ resultado, mediciones, sistema, meta, onCambiarMeta }) {
-  const rango = RANGO_META[resultado.genero]
-  const metaActual = meta ?? rango.sugerida
-  const [texto, setTexto] = useState(String(metaActual))
-  const numero = Number(texto.replace(',', '.'))
-  const error = texto === '' ? 'Escribí tu meta.' : validarMeta(resultado.genero, numero)
-  const metaValida = error ? metaActual : numero
+const TIPOS = [
+  { id: 'grasa', nombre: 'Bajar grasa' },
+  { id: 'musculo', nombre: 'Ganar músculo' },
+]
 
-  const calculo = calcularMeta(
-    { pesoKg: resultado.pesoKg, masaMagraKg: resultado.masaMagraKg, porcentaje: resultado.porcentaje },
-    metaValida,
+const aNumero = (texto) => Number(String(texto).replace(',', '.'))
+
+// Campo numérico de la meta. Guarda el valor solo cuando es válido.
+function CampoMeta({ id, etiqueta, unidad, valorInicial, validar, ayuda, onValido }) {
+  const [texto, setTexto] = useState(valorInicial)
+  const error = texto === '' ? 'Escribí tu meta.' : validar(aNumero(texto))
+  return (
+    <div className="campo meta-campo">
+      <label htmlFor={id}>{etiqueta}</label>
+      <div className={`entrada${error ? ' entrada-error' : ''}`}>
+        <input
+          id={id}
+          type="text"
+          inputMode="decimal"
+          value={texto}
+          onChange={(e) => {
+            setTexto(e.target.value)
+            if (e.target.value !== '' && !validar(aNumero(e.target.value))) onValido(aNumero(e.target.value))
+          }}
+          aria-invalid={Boolean(error)}
+          aria-describedby={`${id}-ayuda`}
+        />
+        <span className="unidad">{unidad}</span>
+      </div>
+      <p id={`${id}-ayuda`} className={error ? 'error' : 'ayuda'}>{error ?? ayuda}</p>
+    </div>
   )
-  // La primera medición guardada es el punto de partida del progreso.
-  const inicial = mediciones.length > 0 ? mediciones.reduce((a, b) => (a.fecha < b.fecha ? a : b)).porcentaje : resultado.porcentaje
-  const progreso = progresoHaciaMeta(inicial, resultado.porcentaje, metaValida)
+}
+
+function Resumen({ datos }) {
+  return (
+    <dl className="metricas cuatro">
+      {datos.map(([nombre, valor]) => (
+        <div key={nombre}><dt>{nombre}</dt><dd>{valor}</dd></div>
+      ))}
+    </dl>
+  )
+}
+
+function Progreso({ valor, detalle }) {
+  const porcentaje = Math.round(valor * 100)
+  return (
+    <div className="progreso-meta">
+      <div className="progreso-texto">
+        <span>Progreso hacia tu meta</span>
+        <strong>{porcentaje}%</strong>
+      </div>
+      <div className="barra-progreso" role="progressbar" aria-valuenow={porcentaje} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso hacia tu meta">
+        <span style={{ width: `${valor * 100}%` }} />
+      </div>
+      <p className="nota">{detalle}</p>
+    </div>
+  )
+}
+
+export default function MetaGrasa({ resultado, primera, sistema, metaGuardada, onCambiar }) {
+  const { genero } = resultado
+  const { tipo, grasa: metaGrasa, musculoKg: metaMusculoKg } = resolverMeta(metaGuardada, resultado)
+  const unidadPeso = sistema === 'imperial' ? 'lb' : 'kg'
 
   return (
     <div className="meta">
-      <div className="campo meta-campo">
-        <label htmlFor="meta">Tu meta de grasa corporal</label>
-        <div className={`entrada${error ? ' entrada-error' : ''}`}>
-          <input
-            id="meta"
-            type="text"
-            inputMode="decimal"
-            value={texto}
-            onChange={(e) => {
-              setTexto(e.target.value)
-              const n = Number(e.target.value.replace(',', '.'))
-              if (e.target.value !== '' && !validarMeta(resultado.genero, n)) onCambiarMeta(n)
-            }}
-            aria-invalid={Boolean(error)}
-            aria-describedby="meta-ayuda"
-          />
-          <span className="unidad">%</span>
+      <fieldset className="campo selector">
+        <legend>Tu meta</legend>
+        <div className="opciones">
+          {TIPOS.map((t) => (
+            <button key={t.id} type="button" className={`opcion${t.id === tipo ? ' activa' : ''}`} aria-pressed={t.id === tipo} onClick={() => onCambiar({ tipo: t.id })}>
+              {t.nombre}
+            </button>
+          ))}
         </div>
-        <p id="meta-ayuda" className={error ? 'error' : 'ayuda'}>
-          {error ?? `Rango saludable para empezar: ${rango.sugerida - 3}–${rango.sugerida + 3}%.`}
-        </p>
-      </div>
+      </fieldset>
+
+      {tipo === 'grasa' ? (
+        <MetaDeGrasa
+          key={`grasa-${genero}`}
+          resultado={resultado}
+          primera={primera}
+          meta={metaGrasa}
+          sistema={sistema}
+          onCambiar={(valor) => onCambiar({ grasa: valor })}
+          onUsarMusculo={() => onCambiar({ tipo: 'musculo' })}
+        />
+      ) : (
+        <MetaDeMusculo
+          key={`musculo-${genero}-${sistema}`}
+          resultado={resultado}
+          primera={primera}
+          kgAGanar={metaMusculoKg}
+          sistema={sistema}
+          unidadPeso={unidadPeso}
+          onCambiar={(kg) => onCambiar({ musculoKg: kg })}
+        />
+      )}
+    </div>
+  )
+}
+
+function MetaDeGrasa({ resultado, primera, meta, sistema, onCambiar, onUsarMusculo }) {
+  const { genero, porcentaje } = resultado
+  const rango = RANGO_META[genero]
+  const calculo = calcularMeta({ pesoKg: resultado.pesoKg, masaMagraKg: resultado.masaMagraKg, porcentaje }, meta)
+  const progreso = progresoHaciaMeta(primera.porcentaje, porcentaje, meta)
+
+  return (
+    <>
+      <CampoMeta
+        id="meta"
+        etiqueta="Meta de grasa corporal"
+        unidad="%"
+        valorInicial={String(meta)}
+        validar={(n) => validarMeta(genero, n)}
+        ayuda={`Hoy estás en ${porcentaje.toFixed(1)}%. Mínimo saludable: ${rango.min}%.`}
+        onValido={onCambiar}
+      />
 
       {calculo.alcanzada ? (
-        <p className="meta-logro">🎉 Ya estás en tu meta o por debajo. Podés mantener o fijar una nueva.</p>
+        <div className="meta-logro">
+          <p>
+            <strong>Ya estás en {porcentaje.toFixed(1)}%, por debajo de tu meta de {meta}%.</strong>{' '}
+            {porcentaje <= rango.min + 2
+              ? 'No conviene bajar más la grasa: tu próximo paso es ganar músculo.'
+              : 'Bajá la meta para seguir avanzando, o proponete ganar músculo.'}
+          </p>
+          <button type="button" className="boton-enlace" onClick={onUsarMusculo}>Cambiar a meta de músculo →</button>
+        </div>
       ) : (
         <>
-          <dl className="metricas cuatro">
-            <div><dt>Peso meta</dt><dd>{formatearPeso(calculo.pesoMetaKg, sistema)}</dd></div>
-            <div><dt>Grasa a perder</dt><dd>{formatearPeso(calculo.grasaAPerderKg, sistema)}</dd></div>
-            <div><dt>Tiempo estimado</dt><dd>{calculo.semanas} sem.</dd></div>
-            <div><dt>Fecha estimada</dt><dd>{formatearFecha(calculo.fechaEstimada)}</dd></div>
-          </dl>
+          <Resumen
+            datos={[
+              ['Peso meta', formatearPeso(calculo.pesoMetaKg, sistema)],
+              ['Grasa a perder', formatearPeso(calculo.grasaAPerderKg, sistema)],
+              ['Tiempo estimado', `${calculo.semanas} sem.`],
+              ['Fecha estimada', formatearFecha(calculo.fechaEstimada)],
+            ]}
+          />
           <p className="nota">
             Calculado bajando unos {formatearPeso(calculo.perdidaSemanalKg, sistema)} por semana (0,7 % de tu peso) y
             conservando tu masa magra, con el plan de alimentación y la rutina de este panel.
@@ -60,25 +159,58 @@ export default function MetaGrasa({ resultado, mediciones, sistema, meta, onCamb
         </>
       )}
 
-      <div className="progreso-meta">
-        <div className="progreso-texto">
-          <span>Progreso hacia tu meta</span>
-          <strong>{Math.round(progreso * 100)}%</strong>
-        </div>
-        <div
-          className="barra-progreso"
-          role="progressbar"
-          aria-valuenow={Math.round(progreso * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Progreso hacia tu meta"
-        >
-          <span style={{ width: `${progreso * 100}%` }} />
-        </div>
-        <p className="nota">
-          Desde {inicial.toFixed(1)}% (tu primera medición) hasta {metaValida}%. Hoy: {resultado.porcentaje.toFixed(1)}%.
-        </p>
-      </div>
-    </div>
+      <Progreso
+        valor={progreso}
+        detalle={`Desde ${primera.porcentaje.toFixed(1)}% (tu primera medición) hasta ${meta}%. Hoy: ${porcentaje.toFixed(1)}%.`}
+      />
+    </>
+  )
+}
+
+function MetaDeMusculo({ resultado, primera, kgAGanar, sistema, unidadPeso, onCambiar }) {
+  const imperial = sistema === 'imperial'
+  const aMostrar = (kg) => Number((imperial ? kg / KG_POR_LIBRA : kg).toFixed(1))
+  const aKg = (n) => (imperial ? n * KG_POR_LIBRA : n)
+  const calculo = calcularMetaMusculo(
+    { inicialMagraKg: primera.masaMagraKg, actual: { masaMagraKg: resultado.masaMagraKg, porcentaje: resultado.porcentaje } },
+    kgAGanar,
+  )
+
+  return (
+    <>
+      <CampoMeta
+        id="meta-musculo"
+        etiqueta="Músculo que querés ganar"
+        unidad={unidadPeso}
+        valorInicial={String(aMostrar(kgAGanar))}
+        validar={(n) => validarMetaMusculo(aKg(n))}
+        ayuda={`Contado desde tu primera medición (${formatearPeso(primera.masaMagraKg, sistema)} de masa magra). ${unidadPeso === 'kg' ? 'Entre 2 y 4 kg' : 'Entre 4 y 9 lb'} es un buen primer objetivo.`}
+        onValido={(n) => onCambiar(aKg(n))}
+      />
+
+      {calculo.alcanzada ? (
+        <p className="meta-logro"><strong>🎉 ¡Llegaste a tu meta de músculo!</strong> Subila para seguir progresando.</p>
+      ) : (
+        <>
+          <Resumen
+            datos={[
+              ['Masa magra meta', formatearPeso(calculo.objetivoMagraKg, sistema)],
+              ['Te falta ganar', formatearPeso(calculo.faltaKg, sistema)],
+              ['Tiempo estimado', `${calculo.semanas} sem.`],
+              ['Fecha estimada', formatearFecha(calculo.fechaEstimada)],
+            ]}
+          />
+          <p className="nota">
+            Calculado ganando unos {formatearPeso(0.5, sistema)} de músculo por mes, un ritmo realista si seguís la rutina
+            y comés en superávit. Si mantenés tu % de grasa, pesarías unos {formatearPeso(calculo.pesoFinalKg, sistema)}.
+          </p>
+        </>
+      )}
+
+      <Progreso
+        valor={calculo.progreso}
+        detalle={`Masa magra: ${formatearPeso(primera.masaMagraKg, sistema)} en tu primera medición, ${formatearPeso(resultado.masaMagraKg, sistema)} hoy.`}
+      />
+    </>
   )
 }

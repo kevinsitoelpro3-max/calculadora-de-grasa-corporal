@@ -98,3 +98,50 @@ describe('rutina', () => {
     expect(plancha.reps).toBe('30–45 s')
   })
 })
+
+describe('meta sugerida y meta de músculo', async () => {
+  const { metaSugerida, tipoMetaSugerido, calcularMetaMusculo, validarMetaMusculo } = await import('./meta.js')
+
+  it('sugiere 3 puntos menos que hoy, dentro del rango saludable', () => {
+    expect(metaSugerida('hombre', 17.2)).toBe(14)
+    expect(metaSugerida('hombre', 6.9)).toBe(8)
+    expect(metaSugerida('mujer', 17.3)).toBe(16)
+    expect(metaSugerida('hombre', 40)).toBe(30)
+  })
+
+  it('elige meta de músculo si el objetivo es ganar o si ya estás muy magro', () => {
+    expect(tipoMetaSugerido('hombre', 17, 'ganar')).toBe('musculo')
+    expect(tipoMetaSugerido('hombre', 8.5, 'bajar')).toBe('musculo')
+    expect(tipoMetaSugerido('mujer', 17.3, 'mantener')).toBe('musculo')
+    expect(tipoMetaSugerido('mujer', 25, 'bajar')).toBe('grasa')
+  })
+
+  it('calcula tiempo, peso final y progreso de la meta de músculo', () => {
+    const r = calcularMetaMusculo(
+      { inicialMagraKg: 60, actual: { masaMagraKg: 61, porcentaje: 10 } },
+      3,
+      new Date('2026-01-01T00:00:00Z'),
+    )
+    expect(r.objetivoMagraKg).toBe(63)
+    expect(r.faltaKg).toBeCloseTo(2, 6)
+    expect(r.semanas).toBe(Math.ceil((2 / 0.5) * (52 / 12))) // 18 semanas
+    expect(r.pesoFinalKg).toBeCloseTo(70, 6)
+    expect(r.progreso).toBeCloseTo(1 / 3, 6)
+    expect(calcularMetaMusculo({ inicialMagraKg: 60, actual: { masaMagraKg: 64, porcentaje: 10 } }, 3).alcanzada).toBe(true)
+  })
+
+  it('valida la cantidad de músculo', () => {
+    expect(validarMetaMusculo(0.2)).toMatch(/al menos/)
+    expect(validarMetaMusculo(20)).toMatch(/15 kg/)
+    expect(validarMetaMusculo(3)).toBeNull()
+  })
+})
+
+describe('resolverMeta', async () => {
+  const { resolverMeta } = await import('./meta.js')
+  it('completa con sugerencias y acepta el formato viejo (número)', () => {
+    expect(resolverMeta(undefined, { genero: 'hombre', porcentaje: 17.2, objetivo: 'bajar' })).toEqual({ tipo: 'grasa', grasa: 14, musculoKg: 3 })
+    expect(resolverMeta(12, { genero: 'hombre', porcentaje: 17.2, objetivo: 'bajar' })).toMatchObject({ grasa: 12 })
+    expect(resolverMeta({ tipo: 'musculo', musculoKg: 5 }, { genero: 'mujer', porcentaje: 30, objetivo: 'bajar' })).toEqual({ tipo: 'musculo', grasa: 27, musculoKg: 5 })
+  })
+})

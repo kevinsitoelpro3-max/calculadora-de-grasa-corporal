@@ -4,6 +4,7 @@ import MetaGrasa from './MetaGrasa.jsx'
 import MenuDelDia from './MenuDelDia.jsx'
 import RutinaSemanal from './RutinaSemanal.jsx'
 import { guardarPreferencias, leerPreferencias } from '../lib/historial.js'
+import { resolverMeta } from '../lib/meta.js'
 
 const PESTANAS = [
   { id: 'progreso', nombre: 'Progreso' },
@@ -34,6 +35,15 @@ export default function PanelPremium({ resultado, mediciones, sistema }) {
   }
 
   const medicionesDelGenero = mediciones.filter((m) => m.genero === resultado.genero)
+  // La primera medición guardada es el punto de partida del progreso.
+  const primera = medicionesDelGenero.length > 0
+    ? medicionesDelGenero.reduce((a, b) => (a.fecha < b.fecha ? a : b))
+    : resultado
+  const metaGuardada = preferencias.meta?.[resultado.genero]
+  const meta = resolverMeta(metaGuardada, resultado)
+  const lineasMeta = meta.tipo === 'grasa'
+    ? { porcentaje: meta.grasa }
+    : { magra: primera.masaMagraKg + meta.musculoKg }
 
   return (
     <section className="tarjeta panel-premium" aria-labelledby="titulo-premium">
@@ -64,15 +74,22 @@ export default function PanelPremium({ resultado, mediciones, sistema }) {
       <div id="panel-progreso" role="tabpanel" aria-labelledby="pestana-progreso" className={`panel${pestana === 'progreso' ? '' : ' oculto'}`}>
         <h3 className="solo-impresion">Progreso</h3>
         <MetaGrasa
-          key={resultado.genero}
           resultado={resultado}
-          mediciones={medicionesDelGenero}
+          primera={primera}
           sistema={sistema}
-          meta={preferencias.meta?.[resultado.genero]}
-          onCambiarMeta={(valor) => cambiarPreferencias({ meta: { ...preferencias.meta, [resultado.genero]: valor } })}
+          metaGuardada={metaGuardada}
+          onCambiar={(cambios) =>
+            cambiarPreferencias({ meta: { ...preferencias.meta, [resultado.genero]: { ...meta, ...cambios } } })
+          }
         />
         {medicionesDelGenero.length > 1 ? (
-          <GraficoEvolucion mediciones={medicionesDelGenero} sistema={sistema} meta={preferencias.meta?.[resultado.genero]} />
+          <GraficoEvolucion
+            key={meta.tipo}
+            mediciones={medicionesDelGenero}
+            sistema={sistema}
+            metas={lineasMeta}
+            metricaInicial={meta.tipo === 'grasa' ? 'porcentaje' : 'magra'}
+          />
         ) : (
           <p className="aviso-suave">📈 Medite de nuevo en 1 o 2 semanas: con dos mediciones vas a ver acá el gráfico de tu evolución.</p>
         )}
