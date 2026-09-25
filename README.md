@@ -34,18 +34,24 @@ src/
 │   ├── units.js          conversión pulgadas/libras
 │   ├── historial.js      mediciones y formulario guardados en el navegador
 │   ├── formato.js        fechas, pesos y cambios con signo
+│   ├── supabase.js       conexión a Supabase (solo si están las variables de entorno)
+│   ├── nube.js           cuentas y mediciones guardadas en la nube
 │   └── *.test.js         pruebas automáticas (Vitest)
 ├── components/           ← la interfaz
 │   ├── Formulario.jsx    formulario con ayudas para medirse
 │   ├── GuiaMedicion.jsx  silueta que marca dónde medir el campo activo
 │   ├── Historial.jsx     tabla con tus mediciones anteriores
+│   ├── Cuenta.jsx        ingreso con enlace mágico por email
 │   ├── Campo.jsx         un campo numérico con unidad y error
 │   ├── Selector.jsx      botones de opción (género, unidades, objetivo)
 │   ├── Resultado.jsx     % de grasa, categoría, escala y métricas
 │   └── Plan.jsx          plan de alimentación y entrenamiento
+├── hooks/
+│   └── useCuenta.js      sesión y sincronización del historial con la cuenta
 ├── App.jsx               une todo: valida → calcula → muestra
 ├── main.jsx              punto de entrada de React
 └── styles.css            estilos mobile-first, con modo oscuro
+supabase/migrations/      SQL para crear la tabla en Supabase
 ```
 
 La regla principal es **separar la lógica (`lib/`) de la interfaz (`components/`)**. Así las
@@ -90,14 +96,42 @@ pantalla.
 > ⚠️ El método U.S. Navy tiene un margen de error de ±3 a 4 puntos. La app lo muestra como
 > **estimación** e incluye un aviso de que no reemplaza a un profesional de la salud.
 
+## Cuentas con Supabase (opcional)
+
+Sin configurar nada, la app funciona igual y el historial queda en el navegador. Para que los
+usuarios puedan crear una cuenta y ver sus mediciones en cualquier dispositivo:
+
+1. **Crear el proyecto.** Entrá a [supabase.com](https://supabase.com), creá una cuenta y un
+   proyecto nuevo (plan gratis). Elegí la región más cercana a tus usuarios, por ejemplo São Paulo.
+2. **Crear la tabla.** En el proyecto: **SQL Editor → New query**, pegá todo el contenido de
+   `supabase/migrations/001_mediciones.sql` y apretá **Run**. Crea la tabla `mediciones` con
+   seguridad por fila (cada usuario solo ve y borra lo suyo).
+3. **Configurar el enlace mágico.** En **Authentication → URL Configuration**:
+   - *Site URL*: tu dirección de Vercel (por ejemplo `https://calculadora-de-grasa-corporal.vercel.app`).
+   - *Redirect URLs*: agregá esa misma dirección, `https://*-kevin-2887.vercel.app/**` (para las
+     vistas previas) y `http://localhost:5173` (para probar en tu compu).
+4. **Copiar las claves.** En **Project Settings → API** copiá la *Project URL* y la clave
+   *anon public*. La clave anon es pública a propósito: la seguridad la da la política de filas.
+   **Nunca** uses la clave `service_role` en la app.
+5. **Cargarlas en Vercel.** En tu proyecto de Vercel: **Settings → Environment Variables**, agregá
+   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` con esos valores y volvé a publicar
+   (**Deployments → ⋯ → Redeploy**). Para probar en tu compu, copiá `.env.example` como
+   `.env.local` y completalo.
+
+Cómo funciona: la persona escribe su email y recibe un enlace. Al abrirlo queda conectada; sus
+mediciones del navegador se suben a su cuenta (sin duplicarse) y, desde ahí, cada nueva medición
+se guarda en la nube y en el navegador.
+
+> ⚠️ **Límites del plan gratis:** Supabase envía pocos emails por hora con su servidor de
+> prueba. Antes de tener usuarios reales, configurá un proveedor de email propio en
+> **Authentication → Emails → SMTP Settings** (por ejemplo, Resend, que tiene plan gratis).
+> Además, los proyectos gratis se pausan después de una semana sin uso: se reactivan desde el panel.
+
 ## Próximos pasos
 
-### (a) Cuentas e historial
-- **Supabase** (gratis para empezar): inicio de sesión con email o Google y una tabla
-  `mediciones` (usuario, fecha, medidas, % de grasa). El historial local de `historial.js` se
-  puede subir a la cuenta la primera vez que el usuario inicia sesión.
-- Activar *Row Level Security* para que cada usuario vea solo sus datos.
-- Agregar una pantalla de historial con un gráfico de evolución.
+### (a) Mejoras para las cuentas
+- Gráfico de evolución del % de grasa y del peso.
+- Ingreso con Google además del enlace por email.
 
 ### (b) Planes personalizados con IA
 - Crear una **función serverless** (por ejemplo, `api/plan.js` en Vercel) que llame a la API de

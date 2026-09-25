@@ -320,3 +320,23 @@ select {
 }
 
 .boton-secundario:hover { color: var(--error); border-color: var(--error); }
+
+/* Cuenta */
+.cuenta h2 { margin-bottom: 6px; }
+.cuenta-form { display: grid; gap: 10px; margin-top: 8px; }
+.cuenta-linea { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.cuenta-linea strong { overflow-wrap: anywhere; }
+.boton:disabled { opacity: 0.6; cursor: wait; }
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 560px) {
+  .cuenta-form { grid-template-columns: 1fr auto; }
+}
