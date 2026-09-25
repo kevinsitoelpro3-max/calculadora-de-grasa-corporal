@@ -320,3 +320,145 @@ select {
 }
 
 .boton-secundario:hover { color: var(--error); border-color: var(--error); }
+
+/* Cuenta */
+.cuenta h2 { margin-bottom: 6px; }
+.cuenta-form { display: grid; gap: 10px; margin-top: 8px; }
+.cuenta-linea { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.cuenta-linea strong { overflow-wrap: anywhere; }
+.boton:disabled { opacity: 0.6; cursor: wait; }
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 560px) {
+  .cuenta-form { grid-template-columns: 1fr auto; }
+}
+
+/* Panel premium */
+.premium-encabezado { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.premium-encabezado h2 { margin: 0; }
+.insignia-premium {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--acento) 14%, transparent);
+  color: var(--acento);
+}
+
+.pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--borde); margin-bottom: 16px; }
+.pestana {
+  flex: 1;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 8px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.pestana.activa { color: var(--acento); border-bottom-color: var(--acento); }
+.pestana:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+.panel { display: grid; gap: 16px; margin-bottom: 16px; }
+.oculto { display: none; }
+.solo-impresion { display: none; }
+
+button.opcion { font: inherit; font-size: 0.9rem; font-weight: 500; background: transparent; color: inherit; }
+
+/* Meta */
+.meta { display: grid; gap: 12px; }
+.meta-campo { max-width: 260px; }
+.meta-logro { background: color-mix(in srgb, var(--acento) 12%, transparent); padding: 10px 12px; border-radius: 10px; }
+.progreso-meta { display: grid; gap: 6px; }
+.progreso-texto { display: flex; justify-content: space-between; font-size: 0.9rem; }
+.barra-progreso { height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--acento) 16%, var(--fondo)); overflow: hidden; }
+.barra-progreso span { display: block; height: 100%; border-radius: 999px; background: var(--acento); }
+
+/* Gráfico */
+.grafico { display: grid; gap: 8px; }
+.metricas-selector .opcion { padding: 8px 10px; font-size: 0.85rem; }
+.grafico-titulo { margin: 4px 0 0; font-weight: 600; }
+.grafico-lienzo { position: relative; }
+.grafico-lienzo svg { width: 100%; height: auto; display: block; overflow: visible; }
+.eje line { stroke: var(--borde); stroke-width: 1; }
+.eje text, .eje-fecha { fill: var(--texto-suave); font-size: 11px; font-variant-numeric: tabular-nums; }
+.linea-meta line { stroke: var(--texto-suave); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.linea-meta text { fill: var(--texto-suave); font-size: 11px; font-weight: 600; }
+.serie-linea { fill: none; stroke: var(--acento); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.serie-area { fill: var(--acento); opacity: 0.1; }
+.serie-punto { fill: var(--acento); stroke: var(--tarjeta); stroke-width: 2; }
+.etiqueta-final { fill: var(--texto); font-size: 12px; font-weight: 700; }
+.cursor { stroke: var(--texto-suave); stroke-width: 1; }
+.zona-interaccion { fill: transparent; cursor: crosshair; touch-action: pan-y; }
+.zona-interaccion:focus-visible { outline: 2px solid var(--acento); }
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  display: grid;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--texto);
+  color: var(--tarjeta);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+.tooltip-fecha { opacity: 0.8; }
+
+/* Menú */
+.menu { display: grid; gap: 12px; }
+.comida { border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; background: var(--fondo); }
+.comida-encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.comida h4, .dia-rutina h4 { margin: 0 0 6px; font-size: 1rem; }
+.comida-kcal { font-size: 0.85rem; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.comida .libre { color: var(--texto-suave); }
+.comida-macros { font-size: 0.8rem; color: var(--texto-suave); margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+.boton-enlace {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 6px 0 0;
+  border: 0;
+  background: none;
+  color: var(--acento);
+  cursor: pointer;
+}
+
+/* Rutina */
+.rutina { display: grid; gap: 12px; }
+.rutina p { margin: 0; }
+.dia-rutina { border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; background: var(--fondo); }
+.tabla-rutina { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabla-rutina th { text-align: left; font-size: 0.75rem; color: var(--texto-suave); font-weight: 600; padding: 4px 0; }
+.tabla-rutina td { padding: 6px 0; border-top: 1px solid var(--borde); vertical-align: top; }
+.tabla-rutina .series { white-space: nowrap; padding-left: 8px; text-align: right; font-variant-numeric: tabular-nums; }
+.tabla-rutina th:last-child { text-align: right; }
+
+/* Impresión / PDF: solo el resultado y el plan completo */
+@media print {
+  :root { --fondo: #fff; --tarjeta: #fff; --texto: #000; --texto-suave: #444; --borde: #ccc; }
+  body { background: #fff; }
+  .formulario, .cuenta, .no-imprimir, .pestanas, .zona-interaccion, .metricas-selector, .tabla-historial + .boton-secundario { display: none !important; }
+  .oculto { display: grid !important; }
+  .solo-impresion { display: block; margin: 8px 0 0; }
+  .tarjeta { border: 0; padding: 0; break-inside: auto; }
+  .comida, .dia-rutina { break-inside: avoid; }
+  .contenedor { max-width: none; padding: 0; }
+}
+.rutina-controles { display: grid; gap: 12px; }
+.rutina-controles .opcion { flex: 1 1 0; }
+.tabla-rutina th:last-child { white-space: nowrap; }
+@media (min-width: 560px) {
+  .rutina-controles { grid-template-columns: 1fr 1fr; }
+}
+.grafico-lienzo { max-width: 560px; }
+.aviso-suave { background: var(--fondo); border: 1px dashed var(--borde); border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; margin: 0; }

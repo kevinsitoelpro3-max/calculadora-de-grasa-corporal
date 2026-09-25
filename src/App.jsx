@@ -3,6 +3,9 @@ import Formulario from './components/Formulario.jsx'
 import Resultado from './components/Resultado.jsx'
 import Plan from './components/Plan.jsx'
 import Historial from './components/Historial.jsx'
+import Cuenta from './components/Cuenta.jsx'
+import PanelPremium from './components/PanelPremium.jsx'
+import useCuenta from './hooks/useCuenta.js'
 import { categoria, composicion, imc, porcentajeGrasaNavy } from './lib/bodyfat.js'
 import { generarPlan } from './lib/plan.js'
 import { borrarHistorial, compararMediciones, guardarMedicion, leerFormulario, leerHistorial } from './lib/historial.js'
@@ -13,6 +16,7 @@ function calcular(datos, { objetivo, actividad }) {
   const { masaGrasaKg, masaMagraKg } = composicion({ pesoKg: datos.pesoKg, porcentaje })
   return {
     genero: datos.genero,
+    pesoKg: datos.pesoKg,
     porcentaje,
     categoria: cat,
     imc: imc(datos.pesoKg, datos.estaturaCm),
@@ -26,7 +30,10 @@ function calcular(datos, { objetivo, actividad }) {
 export default function App() {
   const [resultado, setResultado] = useState(null)
   const [sistema, setSistema] = useState(() => (leerFormulario()?.sistema === 'imperial' ? 'imperial' : 'metrico'))
-  const [historial, setHistorial] = useState(leerHistorial)
+  const [historialLocal, setHistorialLocal] = useState(leerHistorial)
+  const cuenta = useCuenta()
+  // Con sesión iniciada se muestra el historial de la cuenta; si no, el del navegador.
+  const historial = cuenta.historialNube ?? historialLocal
   const resultadoRef = useRef(null)
 
   function manejarCalculo(datos, preferencias) {
@@ -40,7 +47,8 @@ export default function App() {
       masaMagraKg: nuevo.masaMagraKg,
     }
     setResultado({ ...nuevo, comparacion: compararMediciones(medicion, historial[0]) })
-    setHistorial(guardarMedicion(medicion))
+    setHistorialLocal(guardarMedicion(medicion))
+    cuenta.guardar(medicion)
     setSistema(preferencias.sistema)
     requestAnimationFrame(() => resultadoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
@@ -58,15 +66,27 @@ export default function App() {
           <div ref={resultadoRef} className="resultados">
             <Resultado resultado={resultado} sistema={sistema} />
             <Plan plan={resultado.plan} objetivo={resultado.objetivo} />
+            <PanelPremium resultado={resultado} mediciones={historial} sistema={sistema} />
           </div>
+        )}
+        {cuenta.disponible && (resultado || historial.length > 0 || cuenta.sesion) && (
+          <Cuenta
+            sesion={cuenta.sesion}
+            sincronizando={cuenta.sincronizando}
+            errorNube={cuenta.errorNube}
+            onEnviarEnlace={cuenta.enviarEnlace}
+            onCerrarSesion={cuenta.cerrarSesion}
+          />
         )}
         {historial.length > 0 && (
           <Historial
             mediciones={historial}
             sistema={sistema}
+            enCuenta={Boolean(cuenta.sesion)}
             onBorrar={() => {
               borrarHistorial()
-              setHistorial([])
+              setHistorialLocal([])
+              cuenta.borrarTodo()
               setResultado((r) => r && { ...r, comparacion: null })
             }}
           />
@@ -76,7 +96,10 @@ export default function App() {
       <footer className="pie">
         <p>
           Esta herramienta da una <strong>estimación</strong> con fines informativos y no reemplaza la
-          consulta con un médico, nutricionista o entrenador. Tus datos no salen de tu navegador.
+          consulta con un médico, nutricionista o entrenador.{' '}
+          {cuenta.sesion
+            ? 'Tus mediciones se guardan en tu cuenta y solo vos podés verlas.'
+            : 'Si no creás una cuenta, tus datos no salen de tu navegador.'}
         </p>
       </footer>
     </div>

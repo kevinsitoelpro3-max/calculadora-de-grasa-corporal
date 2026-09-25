@@ -4,6 +4,7 @@
 
 const CLAVE_HISTORIAL = 'calculadora-grasa:historial'
 const CLAVE_FORMULARIO = 'calculadora-grasa:formulario'
+const CLAVE_PREFERENCIAS = 'calculadora-grasa:preferencias'
 const MAXIMO_MEDICIONES = 20
 const MS_POR_DIA = 24 * 60 * 60 * 1000
 
@@ -48,6 +49,17 @@ export function guardarMedicion(medicion, storage = almacenamiento()) {
 export function borrarHistorial(storage = almacenamiento()) {
   escribir(CLAVE_HISTORIAL, null, storage)
   escribir(CLAVE_FORMULARIO, null, storage)
+  escribir(CLAVE_PREFERENCIAS, null, storage)
+}
+
+// Preferencias del panel premium (meta, días de entrenamiento, lugar, opciones del menú).
+export function leerPreferencias(storage = almacenamiento()) {
+  const datos = leer(CLAVE_PREFERENCIAS, storage)
+  return datos && typeof datos === 'object' ? datos : {}
+}
+
+export function guardarPreferencias(preferencias, storage = almacenamiento()) {
+  escribir(CLAVE_PREFERENCIAS, preferencias, storage)
 }
 
 // Últimos valores del formulario, para no tener que escribirlos de nuevo.

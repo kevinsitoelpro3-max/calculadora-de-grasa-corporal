@@ -1,14 +1,21 @@
 import { conSigno, formatearFecha, formatearPeso } from '../lib/formato.js'
 
-export default function Historial({ mediciones, sistema, onBorrar }) {
+export default function Historial({ mediciones, sistema, enCuenta, onBorrar }) {
   function borrar() {
-    if (window.confirm('¿Borrar todas tus mediciones guardadas en este dispositivo?')) onBorrar()
+    const pregunta = enCuenta
+      ? '¿Borrar todas tus mediciones de tu cuenta y de este dispositivo? No se puede deshacer.'
+      : '¿Borrar todas tus mediciones guardadas en este dispositivo?'
+    if (window.confirm(pregunta)) onBorrar()
   }
 
   return (
     <section className="tarjeta" aria-labelledby="titulo-historial">
       <h2 id="titulo-historial">Tus mediciones</h2>
-      <p className="nota">Se guardan solo en este navegador. Si cambiás de dispositivo o borrás los datos del navegador, no se conservan.</p>
+      <p className="nota">
+        {enCuenta
+          ? 'Guardadas en tu cuenta.'
+          : 'Se guardan solo en este navegador. Si cambiás de dispositivo o borrás los datos del navegador, no se conservan.'}
+      </p>
       <table className="tabla-historial">
         <thead>
           <tr>

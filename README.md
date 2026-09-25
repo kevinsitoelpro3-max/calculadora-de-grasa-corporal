@@ -34,18 +34,29 @@ src/
 │   ├── units.js          conversión pulgadas/libras
 │   ├── historial.js      mediciones y formulario guardados en el navegador
 │   ├── formato.js        fechas, pesos y cambios con signo
+│   ├── supabase.js       conexión a Supabase (solo si están las variables de entorno)
+│   ├── nube.js           cuentas y mediciones guardadas en la nube
+│   ├── meta.js           meta de % de grasa: peso meta, tiempo y progreso
+│   ├── menu.js           menú del día con porciones según tus macros
+│   ├── rutina.js         rutina semanal según objetivo, días y lugar
 │   └── *.test.js         pruebas automáticas (Vitest)
 ├── components/           ← la interfaz
 │   ├── Formulario.jsx    formulario con ayudas para medirse
 │   ├── GuiaMedicion.jsx  silueta que marca dónde medir el campo activo
 │   ├── Historial.jsx     tabla con tus mediciones anteriores
+│   ├── Cuenta.jsx        ingreso con enlace mágico por email
+│   ├── PanelPremium.jsx  pestañas Progreso / Menú / Rutina y botón de PDF
+│   ├── MetaGrasa.jsx, GraficoEvolucion.jsx, MenuDelDia.jsx, RutinaSemanal.jsx
 │   ├── Campo.jsx         un campo numérico con unidad y error
 │   ├── Selector.jsx      botones de opción (género, unidades, objetivo)
 │   ├── Resultado.jsx     % de grasa, categoría, escala y métricas
 │   └── Plan.jsx          plan de alimentación y entrenamiento
+├── hooks/
+│   └── useCuenta.js      sesión y sincronización del historial con la cuenta
 ├── App.jsx               une todo: valida → calcula → muestra
 ├── main.jsx              punto de entrada de React
 └── styles.css            estilos mobile-first, con modo oscuro
+supabase/migrations/      SQL para crear la tabla en Supabase
 ```
 
 La regla principal es **separar la lógica (`lib/`) de la interfaz (`components/`)**. Así las
@@ -87,17 +98,63 @@ pantalla.
 6. **Guía de medición** (`GuiaMedicion.jsx`). Una silueta (distinta para hombre y mujer) resalta
    dónde va la cinta según el campo que estés completando, con consejos para medir bien.
 
+7. **Panel "Tu plan completo" (Premium)**. Todavía no hay cobro, así que el panel queda
+   abierto para todos durante el lanzamiento, en pestañas:
+   - **Progreso** (`meta.js`, `MetaGrasa.jsx`, `GraficoEvolucion.jsx`): dos tipos de meta.
+     *Bajar grasa*: elegís un % (sugerido: 3 puntos menos que hoy, con un mínimo saludable por
+     género) y la app calcula el peso meta conservando la masa magra, los kilos de grasa a
+     perder y una fecha estimada bajando 0,7 % del peso por semana. *Ganar músculo*: elegís
+     cuántos kg sumar desde tu primera medición y calcula el tiempo (a ~0,5 kg por mes) y el
+     peso final. Se elige sola la que tiene sentido (músculo si tu objetivo es ganar o si ya
+     estás cerca del mínimo de grasa). Muestra una barra de progreso y un gráfico de evolución
+     (% de grasa, peso o masa magra) con la línea de la meta y detalle al tocar cada punto.
+   - **Menú** (`menu.js`, `MenuDelDia.jsx`): un día de ejemplo en 4 comidas con porciones en
+     gramos que suman tus calorías y macros. Cada comida tiene varias opciones intercambiables
+     y las porciones tienen un máximo realista (lo que falta se completa con fruta o pan).
+   - **Rutina** (`rutina.js`, `RutinaSemanal.jsx`): de 3 a 5 días por semana, en gimnasio o en
+     casa, con series y repeticiones según tu objetivo, descanso, cardio y consejos.
+   - **PDF**: el botón imprime el resultado y el plan completo (se oculta el formulario).
+   Las elecciones (meta, días, lugar, opciones del menú) se recuerdan en el navegador.
+
 > ⚠️ El método U.S. Navy tiene un margen de error de ±3 a 4 puntos. La app lo muestra como
 > **estimación** e incluye un aviso de que no reemplaza a un profesional de la salud.
 
+## Cuentas con Supabase (opcional)
+
+Sin configurar nada, la app funciona igual y el historial queda en el navegador. Para que los
+usuarios puedan crear una cuenta y ver sus mediciones en cualquier dispositivo:
+
+1. **Crear el proyecto.** Entrá a [supabase.com](https://supabase.com), creá una cuenta y un
+   proyecto nuevo (plan gratis). Elegí la región más cercana a tus usuarios, por ejemplo São Paulo.
+2. **Crear la tabla.** En el proyecto: **SQL Editor → New query**, pegá todo el contenido de
+   `supabase/migrations/001_mediciones.sql` y apretá **Run**. Crea la tabla `mediciones` con
+   seguridad por fila (cada usuario solo ve y borra lo suyo).
+3. **Configurar el enlace mágico.** En **Authentication → URL Configuration**:
+   - *Site URL*: tu dirección de Vercel (por ejemplo `https://calculadora-de-grasa-corporal.vercel.app`).
+   - *Redirect URLs*: agregá esa misma dirección, `https://*-kevin-2887.vercel.app/**` (para las
+     vistas previas) y `http://localhost:5173` (para probar en tu compu).
+4. **Copiar las claves.** En **Project Settings → API** copiá la *Project URL* y la clave
+   *anon public*. La clave anon es pública a propósito: la seguridad la da la política de filas.
+   **Nunca** uses la clave `service_role` en la app.
+5. **Cargarlas en Vercel.** En tu proyecto de Vercel: **Settings → Environment Variables**, agregá
+   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` con esos valores y volvé a publicar
+   (**Deployments → ⋯ → Redeploy**). Para probar en tu compu, copiá `.env.example` como
+   `.env.local` y completalo.
+
+Cómo funciona: la persona escribe su email y recibe un enlace. Al abrirlo queda conectada; sus
+mediciones del navegador se suben a su cuenta (sin duplicarse) y, desde ahí, cada nueva medición
+se guarda en la nube y en el navegador.
+
+> ⚠️ **Límites del plan gratis:** Supabase envía pocos emails por hora con su servidor de
+> prueba. Antes de tener usuarios reales, configurá un proveedor de email propio en
+> **Authentication → Emails → SMTP Settings** (por ejemplo, Resend, que tiene plan gratis).
+> Además, los proyectos gratis se pausan después de una semana sin uso: se reactivan desde el panel.
+
 ## Próximos pasos
 
-### (a) Cuentas e historial
-- **Supabase** (gratis para empezar): inicio de sesión con email o Google y una tabla
-  `mediciones` (usuario, fecha, medidas, % de grasa). El historial local de `historial.js` se
-  puede subir a la cuenta la primera vez que el usuario inicia sesión.
-- Activar *Row Level Security* para que cada usuario vea solo sus datos.
-- Agregar una pantalla de historial con un gráfico de evolución.
+### (a) Mejoras para las cuentas
+- Guardar la meta y las preferencias del panel en la cuenta (hoy quedan en el navegador).
+- Ingreso con Google además del enlace por email.
 
 ### (b) Planes personalizados con IA
 - Crear una **función serverless** (por ejemplo, `api/plan.js` en Vercel) que llame a la API de
@@ -105,4 +162,5 @@ pantalla.
   entorno del servidor, **nunca en el código del navegador**.
 - Los números siguen saliendo de `lib/`; la IA solo redacta el plan a partir de esos datos.
 - Cobrar con **Stripe** ($1,99/mes o $9,99/año), limitar los planes con IA por mes y que la
-  función verifique que la suscripción esté activa.
+  función verifique que la suscripción esté activa. Con el cobro activo, `PanelPremium.jsx`
+  pasa a mostrarse completo solo a suscriptores (el resto ve una vista previa).
