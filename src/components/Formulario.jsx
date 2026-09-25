@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Campo from './Campo.jsx'
 import Selector from './Selector.jsx'
+import GuiaMedicion from './GuiaMedicion.jsx'
 import { etiquetas } from '../lib/units.js'
 import { validarFormulario } from '../lib/validation.js'
 import { NIVELES_ACTIVIDAD, OBJETIVOS } from '../lib/plan.js'
+import { guardarFormulario, leerFormulario } from '../lib/historial.js'
 
 const INICIAL = {
   genero: 'hombre',
@@ -18,9 +20,20 @@ const INICIAL = {
   objetivo: 'bajar',
 }
 
+// Recupera los últimos valores usados, ignorando claves desconocidas o de otro tipo.
+function valoresIniciales() {
+  const guardados = leerFormulario() ?? {}
+  const valores = { ...INICIAL }
+  for (const clave of Object.keys(INICIAL)) {
+    if (typeof guardados[clave] === 'string') valores[clave] = guardados[clave]
+  }
+  return valores
+}
+
 export default function Formulario({ onCalcular }) {
-  const [valores, setValores] = useState(INICIAL)
+  const [valores, setValores] = useState(valoresIniciales)
   const [errores, setErrores] = useState({})
+  const [campoActivo, setCampoActivo] = useState(null)
   const unidad = etiquetas(valores.sistema)
 
   function cambiar(campo, valor) {
@@ -33,12 +46,13 @@ export default function Formulario({ onCalcular }) {
     const { datos, errores: nuevos } = validarFormulario(valores)
     setErrores(nuevos)
     if (datos) {
+      guardarFormulario(valores)
       onCalcular(datos, { objetivo: valores.objetivo, actividad: valores.actividad, sistema: valores.sistema })
     }
   }
 
   const campoMedida = (id, texto, ayuda, u = unidad.largo) => (
-    <Campo id={id} texto={texto} unidad={u} ayuda={ayuda} valor={valores[id]} error={errores[id]} onChange={cambiar} />
+    <Campo id={id} texto={texto} unidad={u} ayuda={ayuda} valor={valores[id]} error={errores[id]} onChange={cambiar} onFocus={setCampoActivo} />
   )
 
   return (
@@ -65,6 +79,7 @@ export default function Formulario({ onCalcular }) {
         {campoMedida('peso', 'Peso', null, unidad.peso)}
       </div>
       {campoMedida('estatura', 'Estatura', null)}
+      <GuiaMedicion genero={valores.genero} campoActivo={campoActivo} />
       {campoMedida('cuello', 'Cuello', 'Justo debajo de la nuez, con la cinta levemente inclinada hacia adelante.')}
       {campoMedida(
         'cintura',

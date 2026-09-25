@@ -1,4 +1,4 @@
-export default function Campo({ id, texto, unidad, ayuda, valor, error, onChange }) {
+export default function Campo({ id, texto, unidad, ayuda, valor, error, onChange, onFocus }) {
   const idAyuda = ayuda ? `${id}-ayuda` : undefined
   const idError = error ? `${id}-error` : undefined
   return (
@@ -12,6 +12,7 @@ export default function Campo({ id, texto, unidad, ayuda, valor, error, onChange
           autoComplete="off"
           value={valor}
           onChange={(e) => onChange(id, e.target.value)}
+          onFocus={() => onFocus?.(id)}
           aria-invalid={Boolean(error)}
           aria-describedby={[idAyuda, idError].filter(Boolean).join(' ') || undefined}
         />
