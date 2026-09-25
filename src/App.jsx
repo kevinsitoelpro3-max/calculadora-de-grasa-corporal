@@ -4,6 +4,7 @@ import Resultado from './components/Resultado.jsx'
 import Plan from './components/Plan.jsx'
 import Historial from './components/Historial.jsx'
 import Cuenta from './components/Cuenta.jsx'
+import PanelPremium from './components/PanelPremium.jsx'
 import useCuenta from './hooks/useCuenta.js'
 import { categoria, composicion, imc, porcentajeGrasaNavy } from './lib/bodyfat.js'
 import { generarPlan } from './lib/plan.js'
@@ -15,6 +16,7 @@ function calcular(datos, { objetivo, actividad }) {
   const { masaGrasaKg, masaMagraKg } = composicion({ pesoKg: datos.pesoKg, porcentaje })
   return {
     genero: datos.genero,
+    pesoKg: datos.pesoKg,
     porcentaje,
     categoria: cat,
     imc: imc(datos.pesoKg, datos.estaturaCm),
@@ -64,6 +66,7 @@ export default function App() {
           <div ref={resultadoRef} className="resultados">
             <Resultado resultado={resultado} sistema={sistema} />
             <Plan plan={resultado.plan} objetivo={resultado.objetivo} />
+            <PanelPremium resultado={resultado} mediciones={historial} sistema={sistema} />
           </div>
         )}
         {cuenta.disponible && (resultado || historial.length > 0 || cuenta.sesion) && (

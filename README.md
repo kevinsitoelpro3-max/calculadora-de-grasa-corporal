@@ -36,12 +36,17 @@ src/
 │   ├── formato.js        fechas, pesos y cambios con signo
 │   ├── supabase.js       conexión a Supabase (solo si están las variables de entorno)
 │   ├── nube.js           cuentas y mediciones guardadas en la nube
+│   ├── meta.js           meta de % de grasa: peso meta, tiempo y progreso
+│   ├── menu.js           menú del día con porciones según tus macros
+│   ├── rutina.js         rutina semanal según objetivo, días y lugar
 │   └── *.test.js         pruebas automáticas (Vitest)
 ├── components/           ← la interfaz
 │   ├── Formulario.jsx    formulario con ayudas para medirse
 │   ├── GuiaMedicion.jsx  silueta que marca dónde medir el campo activo
 │   ├── Historial.jsx     tabla con tus mediciones anteriores
 │   ├── Cuenta.jsx        ingreso con enlace mágico por email
+│   ├── PanelPremium.jsx  pestañas Progreso / Menú / Rutina y botón de PDF
+│   ├── MetaGrasa.jsx, GraficoEvolucion.jsx, MenuDelDia.jsx, RutinaSemanal.jsx
 │   ├── Campo.jsx         un campo numérico con unidad y error
 │   ├── Selector.jsx      botones de opción (género, unidades, objetivo)
 │   ├── Resultado.jsx     % de grasa, categoría, escala y métricas
@@ -93,6 +98,21 @@ pantalla.
 6. **Guía de medición** (`GuiaMedicion.jsx`). Una silueta (distinta para hombre y mujer) resalta
    dónde va la cinta según el campo que estés completando, con consejos para medir bien.
 
+7. **Panel "Tu plan completo" (Premium)**. Todavía no hay cobro, así que el panel queda
+   abierto para todos durante el lanzamiento, en pestañas:
+   - **Progreso** (`meta.js`, `MetaGrasa.jsx`, `GraficoEvolucion.jsx`): elegís una meta de % de
+     grasa (con un mínimo saludable por género) y la app calcula el peso meta conservando la
+     masa magra, los kilos de grasa a perder y una fecha estimada bajando 0,7 % del peso por
+     semana. Muestra una barra de progreso desde tu primera medición y un gráfico de evolución
+     (% de grasa, peso o masa magra) con la línea de la meta y detalle al tocar cada punto.
+   - **Menú** (`menu.js`, `MenuDelDia.jsx`): un día de ejemplo en 4 comidas con porciones en
+     gramos que suman tus calorías y macros. Cada comida tiene varias opciones intercambiables
+     y las porciones tienen un máximo realista (lo que falta se completa con fruta o pan).
+   - **Rutina** (`rutina.js`, `RutinaSemanal.jsx`): de 3 a 5 días por semana, en gimnasio o en
+     casa, con series y repeticiones según tu objetivo, descanso, cardio y consejos.
+   - **PDF**: el botón imprime el resultado y el plan completo (se oculta el formulario).
+   Las elecciones (meta, días, lugar, opciones del menú) se recuerdan en el navegador.
+
 > ⚠️ El método U.S. Navy tiene un margen de error de ±3 a 4 puntos. La app lo muestra como
 > **estimación** e incluye un aviso de que no reemplaza a un profesional de la salud.
 
@@ -130,7 +150,7 @@ se guarda en la nube y en el navegador.
 ## Próximos pasos
 
 ### (a) Mejoras para las cuentas
-- Gráfico de evolución del % de grasa y del peso.
+- Guardar la meta y las preferencias del panel en la cuenta (hoy quedan en el navegador).
 - Ingreso con Google además del enlace por email.
 
 ### (b) Planes personalizados con IA
@@ -139,4 +159,5 @@ se guarda en la nube y en el navegador.
   entorno del servidor, **nunca en el código del navegador**.
 - Los números siguen saliendo de `lib/`; la IA solo redacta el plan a partir de esos datos.
 - Cobrar con **Stripe** ($1,99/mes o $9,99/año), limitar los planes con IA por mes y que la
-  función verifique que la suscripción esté activa.
+  función verifique que la suscripción esté activa. Con el cobro activo, `PanelPremium.jsx`
+  pasa a mostrarse completo solo a suscriptores (el resto ve una vista previa).
