@@ -9,6 +9,8 @@
   --error: #b42318;
   --aviso-fondo: #fff4e0;
   --aviso-borde: #f0b44c;
+  --bueno: #0f7a5c;
+  --malo: #b4491f;
 
   --cat-esencial: #7aa7e0;
   --cat-atletico: #2f9e7a;
@@ -35,6 +37,8 @@
     --error: #ff8a7a;
     --aviso-fondo: #3a2c12;
     --aviso-borde: #a8792a;
+    --bueno: #4fd1a1;
+    --malo: #ff9a70;
   }
 }
 
@@ -235,3 +239,84 @@ select {
   .encabezado h1 { font-size: 2.1rem; }
   .tarjeta { padding: 24px; }
 }
+
+/* Guía de medición */
+.guia {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: var(--fondo);
+}
+
+.guia summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-weight: 600;
+  color: var(--acento);
+}
+
+.guia-contenido {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.silueta { width: 100%; max-width: 260px; height: auto; margin: 0 auto; display: block; }
+.silueta .cuerpo { fill: var(--borde); }
+.silueta .medida ellipse { fill: none; stroke: var(--texto-suave); stroke-width: 2; stroke-dasharray: 5 3; }
+.silueta .medida line { stroke: var(--texto-suave); stroke-width: 1; }
+.silueta .medida text { fill: var(--texto-suave); font-size: 13px; font-weight: 600; }
+.silueta .medida.activa ellipse { stroke: var(--acento); stroke-width: 3.5; stroke-dasharray: none; }
+.silueta .medida.activa line { stroke: var(--acento); stroke-width: 2; }
+.silueta .medida.activa text { fill: var(--acento); font-size: 15px; }
+
+.guia-detalle { font-size: 0.95rem; margin: 0 0 8px; }
+.guia .lista { font-size: 0.875rem; color: var(--texto-suave); }
+
+@media (min-width: 560px) {
+  .guia-contenido { grid-template-columns: 200px 1fr; align-items: start; }
+}
+
+/* Comparación con la medición anterior */
+.comparacion { border-top: 1px solid var(--borde); padding-top: 4px; }
+.comparacion h3 { font-size: 0.95rem; }
+.metricas.cuatro { grid-template-columns: repeat(2, 1fr); }
+.metricas .delta-bueno { color: var(--bueno); }
+.metricas .delta-malo { color: var(--malo); }
+
+@media (min-width: 560px) {
+  .metricas.cuatro { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Historial */
+.tabla-historial {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 14px;
+}
+
+.tabla-historial th {
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-weight: 600;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.tabla-historial td { padding: 8px 4px; border-bottom: 1px solid var(--borde); }
+.delta-chico { color: var(--texto-suave); font-size: 0.8rem; }
+
+.boton-secundario {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.boton-secundario:hover { color: var(--error); border-color: var(--error); }

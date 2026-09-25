@@ -2,8 +2,10 @@ import { useRef, useState } from 'react'
 import Formulario from './components/Formulario.jsx'
 import Resultado from './components/Resultado.jsx'
 import Plan from './components/Plan.jsx'
+import Historial from './components/Historial.jsx'
 import { categoria, composicion, imc, porcentajeGrasaNavy } from './lib/bodyfat.js'
 import { generarPlan } from './lib/plan.js'
+import { borrarHistorial, compararMediciones, guardarMedicion, leerFormulario, leerHistorial } from './lib/historial.js'
 
 function calcular(datos, { objetivo, actividad }) {
   const porcentaje = porcentajeGrasaNavy(datos)
@@ -23,11 +25,22 @@ function calcular(datos, { objetivo, actividad }) {
 
 export default function App() {
   const [resultado, setResultado] = useState(null)
-  const [sistema, setSistema] = useState('metrico')
+  const [sistema, setSistema] = useState(() => (leerFormulario()?.sistema === 'imperial' ? 'imperial' : 'metrico'))
+  const [historial, setHistorial] = useState(leerHistorial)
   const resultadoRef = useRef(null)
 
   function manejarCalculo(datos, preferencias) {
-    setResultado(calcular(datos, preferencias))
+    const nuevo = calcular(datos, preferencias)
+    const medicion = {
+      fecha: new Date().toISOString(),
+      genero: nuevo.genero,
+      porcentaje: nuevo.porcentaje,
+      pesoKg: datos.pesoKg,
+      masaGrasaKg: nuevo.masaGrasaKg,
+      masaMagraKg: nuevo.masaMagraKg,
+    }
+    setResultado({ ...nuevo, comparacion: compararMediciones(medicion, historial[0]) })
+    setHistorial(guardarMedicion(medicion))
     setSistema(preferencias.sistema)
     requestAnimationFrame(() => resultadoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
@@ -46,6 +59,17 @@ export default function App() {
             <Resultado resultado={resultado} sistema={sistema} />
             <Plan plan={resultado.plan} objetivo={resultado.objetivo} />
           </div>
+        )}
+        {historial.length > 0 && (
+          <Historial
+            mediciones={historial}
+            sistema={sistema}
+            onBorrar={() => {
+              borrarHistorial()
+              setHistorial([])
+              setResultado((r) => r && { ...r, comparacion: null })
+            }}
+          />
         )}
       </main>
 

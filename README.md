@@ -32,9 +32,13 @@ src/
 │   ├── plan.js           calorías (Mifflin-St Jeor), macros y rutina por reglas
 │   ├── validation.js     validación del formulario y conversión a cm/kg
 │   ├── units.js          conversión pulgadas/libras
+│   ├── historial.js      mediciones y formulario guardados en el navegador
+│   ├── formato.js        fechas, pesos y cambios con signo
 │   └── *.test.js         pruebas automáticas (Vitest)
 ├── components/           ← la interfaz
 │   ├── Formulario.jsx    formulario con ayudas para medirse
+│   ├── GuiaMedicion.jsx  silueta que marca dónde medir el campo activo
+│   ├── Historial.jsx     tabla con tus mediciones anteriores
 │   ├── Campo.jsx         un campo numérico con unidad y error
 │   ├── Selector.jsx      botones de opción (género, unidades, objetivo)
 │   ├── Resultado.jsx     % de grasa, categoría, escala y métricas
@@ -75,6 +79,14 @@ pantalla.
      0,6 g/kg); el resto, carbohidratos.
    - Avisos si el objetivo no conviene (por ejemplo, ganar músculo con obesidad).
 
+5. **Historial en el navegador** (`historial.js`). Cada cálculo se guarda en `localStorage`
+   (hasta 20 mediciones) junto con los últimos valores del formulario, para no volver a
+   escribirlos. Al calcular de nuevo, la app muestra el cambio en % de grasa, peso, masa grasa y
+   masa magra desde la medición anterior. Los datos no salen del dispositivo, y si el navegador
+   bloquea el almacenamiento la app funciona igual, sin historial.
+6. **Guía de medición** (`GuiaMedicion.jsx`). Una silueta (distinta para hombre y mujer) resalta
+   dónde va la cinta según el campo que estés completando, con consejos para medir bien.
+
 > ⚠️ El método U.S. Navy tiene un margen de error de ±3 a 4 puntos. La app lo muestra como
 > **estimación** e incluye un aviso de que no reemplaza a un profesional de la salud.
 
@@ -82,7 +94,8 @@ pantalla.
 
 ### (a) Cuentas e historial
 - **Supabase** (gratis para empezar): inicio de sesión con email o Google y una tabla
-  `mediciones` (usuario, fecha, medidas, % de grasa).
+  `mediciones` (usuario, fecha, medidas, % de grasa). El historial local de `historial.js` se
+  puede subir a la cuenta la primera vez que el usuario inicia sesión.
 - Activar *Row Level Security* para que cada usuario vea solo sus datos.
 - Agregar una pantalla de historial con un gráfico de evolución.
 
