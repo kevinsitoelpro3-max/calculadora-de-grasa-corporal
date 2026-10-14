@@ -3,6 +3,7 @@ import Formulario from './components/Formulario.jsx'
 import Resultado from './components/Resultado.jsx'
 import Plan from './components/Plan.jsx'
 import Historial from './components/Historial.jsx'
+import AsistenteJarvis from './components/AsistenteJarvis.jsx'
 import { categoria, composicion, imc, porcentajeGrasaNavy } from './lib/bodyfat.js'
 import { generarPlan } from './lib/plan.js'
 import { borrarHistorial, compararMediciones, guardarMedicion, leerFormulario, leerHistorial } from './lib/historial.js'
@@ -12,6 +13,8 @@ function calcular(datos, { objetivo, actividad }) {
   const cat = categoria(datos.genero, porcentaje)
   const { masaGrasaKg, masaMagraKg } = composicion({ pesoKg: datos.pesoKg, porcentaje })
   return {
+    datos,
+    actividad,
     genero: datos.genero,
     porcentaje,
     categoria: cat,
@@ -58,6 +61,7 @@ export default function App() {
           <div ref={resultadoRef} className="resultados">
             <Resultado resultado={resultado} sistema={sistema} />
             <Plan plan={resultado.plan} objetivo={resultado.objetivo} />
+            <AsistenteJarvis resultado={resultado} />
           </div>
         )}
         {historial.length > 0 && (

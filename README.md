@@ -34,6 +34,7 @@ src/
 │   ├── units.js          conversión pulgadas/libras
 │   ├── historial.js      mediciones y formulario guardados en el navegador
 │   ├── formato.js        fechas, pesos y cambios con signo
+│   ├── jarvis.js         conexión opcional con OpenJarvis (IA local)
 │   └── *.test.js         pruebas automáticas (Vitest)
 ├── components/           ← la interfaz
 │   ├── Formulario.jsx    formulario con ayudas para medirse
@@ -42,7 +43,8 @@ src/
 │   ├── Campo.jsx         un campo numérico con unidad y error
 │   ├── Selector.jsx      botones de opción (género, unidades, objetivo)
 │   ├── Resultado.jsx     % de grasa, categoría, escala y métricas
-│   └── Plan.jsx          plan de alimentación y entrenamiento
+│   ├── Plan.jsx          plan de alimentación y entrenamiento
+│   └── AsistenteJarvis.jsx  plan detallado redactado por OpenJarvis
 ├── App.jsx               une todo: valida → calcula → muestra
 ├── main.jsx              punto de entrada de React
 └── styles.css            estilos mobile-first, con modo oscuro
@@ -86,6 +88,31 @@ pantalla.
    bloquea el almacenamiento la app funciona igual, sin historial.
 6. **Guía de medición** (`GuiaMedicion.jsx`). Una silueta (distinta para hombre y mujer) resalta
    dónde va la cinta según el campo que estés completando, con consejos para medir bien.
+
+7. **Plan detallado con IA local** (`jarvis.js`, opcional). Si tenés
+   [OpenJarvis](https://github.com/open-jarvis/OpenJarvis) corriendo en tu computadora, el botón
+   "Pedir plan detallado a Jarvis" le manda tus números ya calculados (calorías, macros, % de grasa,
+   objetivo) y Jarvis redacta un menú de ejemplo, una rutina semanal y consejos. La IA no recalcula
+   nada: usa los números de `lib/`. Todo queda en tu dispositivo.
+
+### Usar OpenJarvis
+
+```bash
+curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash   # instala Jarvis + Ollama
+jarvis model pull qwen3:8b                                              # (opcional) otro modelo
+jarvis serve                                                            # API en http://127.0.0.1:8000
+```
+
+Con `npm run dev` funciona directo: OpenJarvis ya acepta pedidos desde `http://localhost:5173`.
+Si usás la versión publicada (por ejemplo en Vercel), avisale a OpenJarvis desde qué dirección
+viene la página antes de arrancarlo:
+
+```bash
+OPENJARVIS_CORS_ORIGINS=https://tu-app.vercel.app jarvis serve
+```
+
+En "Configuración" podés cambiar la dirección del servidor, elegir el modelo y, si le pusiste una
+API key a OpenJarvis, escribirla (no se guarda).
 
 > ⚠️ El método U.S. Navy tiene un margen de error de ±3 a 4 puntos. La app lo muestra como
 > **estimación** e incluye un aviso de que no reemplaza a un profesional de la salud.
